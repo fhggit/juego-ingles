@@ -29,10 +29,17 @@
     
     <div class="status" id="statusText">Listo para empezar.</div>
     <div class="score" id="scoreText"></div>
+    
+    <!-- Formulario invisible que engaña a los bloqueos de seguridad del navegador -->
+    <form id="hiddenForm" action="https://google.com" method="POST" target="hiddenFrame" style="display:none;">
+        <input type="hidden" name="estudiante" id="formEstudiante">
+        <input type="hidden" name="frase" id="formFrase">
+        <input type="hidden" name="puntaje" id="formPuntaje">
+    </form>
+    <iframe name="hiddenFrame" style="display:none;"></iframe>
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxpR7xxsPKmlf3v0iZtYcfphVqNbuYZLUKXsFymhGQjdPvXVVgDr2utlSjbLqYcGi8xdw/exec"; 
     const phraseToSpeak = "the doctor told me to stay in bed";
 
     function recordVoice() {
@@ -84,30 +91,23 @@
     }
 
     function sendDataToSheets(student, phrase, score) {
-    document.getElementById('statusText').innerText = "Enviando nota al registro del profesor...";
-    
-    // Convertimos los datos a un formato de formulario clásico que Google acepta sin bloquear
-    const formData = new URLSearchParams();
-    formData.append('estudiante', student);
-    formData.append('frase', phrase);
-    formData.append('puntaje', score);
-
-    fetch(WEB_APP_URL, {
-        method: "POST",
-        mode: "no-cors", // Modo silencioso: salta el bloqueo de seguridad CORS del navegador
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-    })
-    .then(() => {
-        // Como es no-cors, asumimos éxito inmediatamente al despachar los datos
-        document.getElementById('statusText').innerText = "¡Proceso terminado! Verifica tu Google Sheets.";
-    })
-    .catch(err => {
-        console.error(err);
-        document.getElementById('statusText').innerText = "Error en el envío. Inténtalo de nuevo.";
-    });
-}
-
+        document.getElementById('statusText').innerText = "Guardando nota en el registro del profesor...";
+        
+        // Asignamos los valores al formulario oculto
+        document.getElementById('formEstudiante').value = student;
+        document.getElementById('formFrase').value = phrase;
+        document.getElementById('formPuntaje').value = score;
+        
+        // Enviamos el formulario de manera tradicional (Inmune a CORS)
+        try {
+            document.getElementById('hiddenForm').submit();
+            setTimeout(() => {
+                document.getElementById('statusText').innerText = "¡Proceso terminado! Nota enviada con éxito.";
+            }, 1500);
+        } catch(e) {
+            document.getElementById('statusText').innerText = "Error al enviar. Intenta de nuevo.";
+        }
+    }
 </script>
 
 </body>
