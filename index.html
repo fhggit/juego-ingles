@@ -84,27 +84,30 @@
     }
 
     function sendDataToSheets(student, phrase, score) {
-        document.getElementById('statusText').innerText = "Guardando nota en el registro...";
-        
-        fetch(WEB_APP_URL, {
-            method: "POST",
-            mode: "cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify({ estudiante: student, frase: phrase, puntaje: score })
-        })
-        .then(response => response.text())
-        .then(text => {
-            if(text.includes("SUCCESS")) {
-                document.getElementById('statusText').innerText = "¡Nota guardada con éxito!";
-            } else {
-                document.getElementById('statusText').innerText = "Nota enviada (Verifica tu Google Sheets).";
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            document.getElementById('statusText').innerText = "Proceso terminado. Revisa tu Google Sheets.";
-        });
-    }
+    document.getElementById('statusText').innerText = "Enviando nota al registro del profesor...";
+    
+    // Convertimos los datos a un formato de formulario clásico que Google acepta sin bloquear
+    const formData = new URLSearchParams();
+    formData.append('estudiante', student);
+    formData.append('frase', phrase);
+    formData.append('puntaje', score);
+
+    fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors", // Modo silencioso: salta el bloqueo de seguridad CORS del navegador
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
+    })
+    .then(() => {
+        // Como es no-cors, asumimos éxito inmediatamente al despachar los datos
+        document.getElementById('statusText').innerText = "¡Proceso terminado! Verifica tu Google Sheets.";
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById('statusText').innerText = "Error en el envío. Inténtalo de nuevo.";
+    });
+}
+
 </script>
 
 </body>
