@@ -32,7 +32,6 @@
 </div>
 
 <script>
-    // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT QUE TERMINA EN /EXEC
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxpR7xxsPKmlf3v0iZtYcfphVqNbuYZLUKXsFymhGQjdPvXVVgDr2utlSjbLqYcGi8xdw/exec"; 
     const phraseToSpeak = "the doctor told me to stay in bed";
 
@@ -85,29 +84,26 @@
     }
 
     function sendDataToSheets(student, phrase, score) {
-    document.getElementById('statusText').innerText = "Guardando nota en el registro...";
-    
-    fetch(WEB_APP_URL, {
-        method: "POST",
-        mode: "cors", // Cambiado a cors para obligar al navegador a procesar la respuesta
-        headers: { "Content-Type": "text/plain" }, // Enviamos como texto plano para evitar pre-checks de seguridad
-        body: JSON.stringify({ estudiante: student, frase: phrase, puntaje: score })
-    })
-    .then(response => response.text())
-    .then(text => {
-        if(text.includes("SUCCESS")) {
-            document.getElementById('statusText').innerText = "¡Nota guardada con éxito!";
-        } else {
-            document.getElementById('statusText').innerText = "Nota enviada (Verifica tu Google Sheets).";
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        // Truco pedagógico: a veces Sheets guarda la nota aunque el navegador reporte un falso error de red
-        document.getElementById('statusText').innerText = "Proceso terminado. Revisa tu Google Sheets.";
-    });
-}
-
+        document.getElementById('statusText').innerText = "Guardando nota en el registro...";
+        
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "cors",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ estudiante: student, frase: phrase, puntaje: score })
+        })
+        .then(response => response.text())
+        .then(text => {
+            if(text.includes("SUCCESS")) {
+                document.getElementById('statusText').innerText = "¡Nota guardada con éxito!";
+            } else {
+                document.getElementById('statusText').innerText = "Nota enviada (Verifica tu Google Sheets).";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('statusText').innerText = "Proceso terminado. Revisa tu Google Sheets.";
+        });
     }
 </script>
 
