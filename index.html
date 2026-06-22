@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Pronunciation Assessment</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #eef2f3; padding: 20px; color: #333; }
+        .container { background: white; max-width: 500px; margin: auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        input[type="text"] { width: 85%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { background: #28a745; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #218838; }
+        .phrase { font-size: 24px; color: #007bff; margin: 20px 0; font-weight: bold; }
+        .status { margin-top: 15px; font-style: italic; color: #666; }
+        .score { font-size: 22px; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🎯 Speak & Score</h2>
+    <p>Introduce tu nombre para iniciar la evaluación:</p>
+    <input type="text" id="studentName" placeholder="Escribe tu nombre completo aquí...">
+    
+    <p>Pronuncia la siguiente frase en voz alta:</p>
+    <div class="phrase" id="targetPhrase">The doctor told me to stay in bed</div>
+    
+    <button onclick="recordVoice()">🎙️ Grabar Voz</button>
+    
+    <div class="status" id="statusText">Listo para empezar.</div>
+    <div class="score" id="scoreText"></div>
+</div>
+
+<script>
+    // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT QUE TERMINA EN /EXEC
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxpR7xxsPKmlf3v0iZtYcfphVqNbuYZLUKXsFymhGQjdPvXVVgDr2utlSjbLqYcGi8xdw/exec"; 
+    const phraseToSpeak = "the doctor told me to stay in bed";
+
+    function recordVoice() {
+        const name = document.getElementById('studentName').value.trim();
+        if (!name) {
+            alert("Por favor, ingresa tu nombre antes de hablar.");
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Tu navegador no soporta reconocimiento de voz. Usa Google Chrome.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US'; 
+        recognition.interimResults = false;
+
+        document.getElementById('statusText').innerText = "Escuchando... ¡Habla ahora!";
+        document.getElementById('scoreText').innerText = "";
+
+        recognition.onresult = function(event) {
+            const resultText = event.results.transcript.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            document.getElementById('statusText').innerText = `Dijeste: "${resultText}"`;
+            
+            let finalScore = 0;
+            if (resultText === phraseToSpeak) {
+                finalScore = 100;
+                document.getElementById('scoreText').innerHTML = "<span style='color:green;'>¡Excelente! 100/100</span>";
+            } else {
+                const wordsTarget = phraseToSpeak.split(" ");
+                const wordsStudent = resultText.split(" ");
+                let correctCount = 0;
+                wordsTarget.forEach(w => { if(wordsStudent.includes(w)) correctCount++; });
+                
+                finalScore = Math.round((correctCount / wordsTarget.length) * 100);
+                document.getElementById('scoreText').innerHTML = `<span style='color:#ffc107;'>Puntaje: ${finalScore}/100</span>`;
+            }
+
+            sendDataToSheets(name, resultText, finalScore);
+        };
+
+        recognition.onerror = function() {
+            document.getElementById('statusText').innerText = "Error al capturar audio. Revisa los permisos.";
+        };
+
+        recognition.start();
+    }
+
+    function sendDataToSheets(student, phrase, score) {
+        document.getElementById('statusText').innerText = "Guardando nota en el registro...";
+        
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ estudiante: student, frase: phrase, puntaje: score })
+        })
+        .then(() => {
+            document.getElementById('statusText').innerText = "¡Nota guardada con éxito!";
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('statusText').innerText = "Error al enviar la nota.";
+        });
+    }
+</script>
+
+</body>
+</html>
