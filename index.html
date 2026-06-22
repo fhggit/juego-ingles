@@ -30,16 +30,22 @@
     <div class="status" id="statusText">Listo para empezar.</div>
     <div class="score" id="scoreText"></div>
     
-    <!-- Formulario invisible que engaña a los bloqueos de seguridad del navegador -->
-    <form id="hiddenForm" action="https://script.google.com/macros/s/AKfycbxpR7xxsPKmlf3v0iZtYcfphVqNbuYZLUKXsFymhGQjdPvXVVgDr2utlSjbLqYcGi8xdw/exec" method="POST" target="hiddenFrame" style="display:none;">
-        <input type="hidden" name="estudiante" id="formEstudiante">
-        <input type="hidden" name="frase" id="formFrase">
-        <input type="hidden" name="puntaje" id="formPuntaje">
+    <!-- Formulario invisible conectado nativamente a Google Forms -->
+    <form id="googleForm" method="POST" target="hiddenFrame" style="display:none;">
+        <input type="hidden" id="formEstudiante">
+        <input type="hidden" id="formFrase">
+        <input type="hidden" name="formPuntaje">
     </form>
     <iframe name="hiddenFrame" style="display:none;"></iframe>
 </div>
 
 <script>
+    // ⚠️ CONFIGURA AQUÍ LOS DATOS DE TU GOOGLE FORM 
+    const FORM_URL = "https://google.com"; 
+    const ENTRY_ESTUDIANTE = "entry.111111111"; // Cambia por tu número de estudiante
+    const ENTRY_FRASE = "entry.222222222";      // Cambia por tu número de frase
+    const ENTRY_PUNTAJE = "entry.333333333";    // Cambia por tu número de puntaje
+
     const phraseToSpeak = "the doctor told me to stay in bed";
 
     function recordVoice() {
@@ -93,19 +99,26 @@
     function sendDataToSheets(student, phrase, score) {
         document.getElementById('statusText').innerText = "Guardando nota en el registro del profesor...";
         
-        // Asignamos los valores al formulario oculto
+        const form = document.getElementById('googleForm');
+        form.action = FORM_URL;
+        
+        // Asignamos los nombres dinámicos de los entry correspondientes
+        document.getElementById('formEstudiante').name = ENTRY_ESTUDIANTE;
+        document.getElementById('formFrase').name = ENTRY_FRASE;
+        document.getElementById('formPuntaje').name = ENTRY_PUNTAJE;
+        
+        // Asignamos los valores reales
         document.getElementById('formEstudiante').value = student;
         document.getElementById('formFrase').value = phrase;
         document.getElementById('formPuntaje').value = score;
         
-        // Enviamos el formulario de manera tradicional (Inmune a CORS)
         try {
-            document.getElementById('hiddenForm').submit();
+            form.submit();
             setTimeout(() => {
-                document.getElementById('statusText').innerText = "¡Proceso terminado! Nota enviada con éxito.";
-            }, 1500);
+                document.getElementById('statusText').innerText = "¡Proceso terminado! Nota guardada con éxito.";
+            }, 1200);
         } catch(e) {
-            document.getElementById('statusText').innerText = "Error al enviar. Intenta de nuevo.";
+            document.getElementById('statusText').innerText = "Error al enviar la nota.";
         }
     }
 </script>
